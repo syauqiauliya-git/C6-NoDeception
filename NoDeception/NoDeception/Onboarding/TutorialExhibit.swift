@@ -30,6 +30,7 @@ struct TutorialExhibit: View {
             GeometryReader { proxy in
                 spotlightOverlay(anchors: anchors, proxy: proxy)
             }
+            .ignoresSafeArea()      // ← moved here
         }
         .alert("Please finish the tutorial", isPresented: $showsFinishTutorialAlert) {
             Button("OK", role: .cancel) { }
@@ -108,10 +109,10 @@ struct TutorialExhibit: View {
 
         ZStack {
             scrim
-                .fill(.black.opacity(0.93), style: FillStyle(eoFill: true))
+                .fill(.black.opacity(0.72), style: FillStyle(eoFill: true))
                 .contentShape(scrim, eoFill: true)
                 .onTapGesture { backgroundTap?() }
-                .ignoresSafeArea()
+                // no .ignoresSafeArea()
 
             ForEach(resolved, id: \.target.id) { entry in
                 RoundedRectangle(cornerRadius: ChromeTokens.caseRadius, style: .continuous)
@@ -136,10 +137,18 @@ struct TutorialExhibit: View {
         }
     }
 
-    private func labelPosition(for frame: CGRect, in size: CGSize) -> CGPoint {
-        let below = frame.midY < size.height * 0.55
-        let y = below ? min(frame.maxY + 150, size.height - 100) : max(frame.minY - 150, 100)
-        return CGPoint(x: size.width / 2, y: y)
+    private func labelPosition(for hole: CGRect, in size: CGSize) -> CGPoint {
+        let spaceBelow = size.height - hole.maxY
+        let spaceAbove = hole.minY
+
+        let y = spaceBelow >= spaceAbove
+            ? hole.maxY + spaceBelow / 2
+            : hole.minY - spaceAbove / 2
+
+        return CGPoint(
+            x: size.width / 2,
+            y: y
+        )
     }
 
     private var taskCase: some View {
@@ -243,9 +252,11 @@ private struct SpotlightScrim: Shape {
     let holes: [CGRect]
 
     func path(in rect: CGRect) -> Path {
-        var path = Path(bounds)
+        var path = Path(rect)          // was Path(bounds)
         for hole in holes {
-            path.addPath(Path(roundedRect: hole.insetBy(dx: -8, dy: -8), cornerRadius: ChromeTokens.caseRadius, style: .continuous))
+            path.addPath(Path(roundedRect: hole.insetBy(dx: -8, dy: -8),
+                              cornerRadius: ChromeTokens.caseRadius,
+                              style: .continuous))
         }
         return path
     }
