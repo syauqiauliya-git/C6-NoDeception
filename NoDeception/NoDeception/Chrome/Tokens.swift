@@ -5,10 +5,11 @@ enum ChromeTokens {
     enum Color {
         static let canvas = SwiftUI.Color(red: 0.984, green: 0.961, blue: 0.929) // #FBF5ED
         static let explanationCanvas = SwiftUI.Color(red: 0.816, green: 0.706, blue: 0.557)
-        static let ink = SwiftUI.Color.black
-        static let action = SwiftUI.Color(red: 0.220, green: 0.306, blue: 0.549) // #384E8C
+        static let ink = SwiftUI.Color(red: 0.141, green: 0.110, blue: 0.086) // #241C16
+        static let action = SwiftUI.Color(red: 0.169, green: 0.129, blue: 0.102) // #2B211A
+        static let chromeControl = SwiftUI.Color(red: 0.365, green: 0.290, blue: 0.235) // #5D4A3C
         static let caseLabel = SwiftUI.Color(red: 0.365, green: 0.290, blue: 0.235) // #5D4A3C
-        static let caseWell = SwiftUI.Color(red: 0.851, green: 0.851, blue: 0.851) // #D9D9D9
+        static let caseWell = SwiftUI.Color(red: 0.855, green: 0.831, blue: 0.796) // #DAD4CB
         static let card = SwiftUI.Color(red: 0.812, green: 0.714, blue: 0.588) // #CFB696
         static let chip = SwiftUI.Color(red: 0.976, green: 0.898, blue: 0.800) // #F9E5CC
         static let chipStroke = SwiftUI.Color(red: 0.259, green: 0.204, blue: 0.161) // #423429
@@ -29,6 +30,7 @@ enum ChromeTokens {
     static let minimumTouchTarget: CGFloat = 44
     static let compactCaseInset: CGFloat = 21
     static let regularCaseInset: CGFloat = 40
+    static let comparisonToggleWidth: CGFloat = 236
 }
 
 extension View {
@@ -58,18 +60,76 @@ struct PrimaryActionButtonStyle: ButtonStyle {
     }
 }
 
+/// Two peers, not a switch. A switch implies the deceptive version is the normal
+/// state and honesty is a feature you enable; two segments say "here are two
+/// versions, compare them" — which is what the comparison is for.
+struct SpecimenComparisonToggle: View {
+    @Binding var isAsBuilt: Bool
+    let isEnabled: Bool
+    let onChanged: () -> Void
+
+    var body: some View {
+        HStack(spacing: 0) {
+            segment(for: .asBuilt, selected: isAsBuilt) {
+                guard !isAsBuilt else { return }
+                isAsBuilt = true
+                onChanged()
+            }
+            segment(for: .withoutIt, selected: !isAsBuilt) {
+                guard isAsBuilt else { return }
+                isAsBuilt = false
+                onChanged()
+            }
+        }
+        .frame(width: ChromeTokens.comparisonToggleWidth, height: 60)
+        .background(ChromeTokens.Color.action.opacity(0.14), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .stroke(ChromeTokens.Color.action, lineWidth: 2)
+        }
+        .opacity(isEnabled ? 1 : 0.48)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Specimen version")
+    }
+
+    private func segment(for variant: SpecimenVariant, selected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(variant.title)
+                .font(.system(size: 17, weight: selected ? .semibold : .regular))
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
+                .foregroundStyle(selected ? .white : ChromeTokens.Color.action)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(selected ? ChromeTokens.Color.action : .clear, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .disabled(!isEnabled)
+        .accessibilityLabel(variant.accessibilityLabel)
+        .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+}
+
 struct GalleryTag: View {
     let title: String
 
     var body: some View {
         Text(title)
-            .font(.system(size: 12, weight: .regular))
-            .foregroundStyle(ChromeTokens.Color.ink)
+            .font(.system(size: 12, weight: .medium))
+            .foregroundStyle(ChromeTokens.Color.chipStroke)
             .lineLimit(1)
-            .padding(.horizontal, 12)
-            .frame(height: 26)
+            .padding(.horizontal, 9)
+            .frame(height: 22)
             .background(ChromeTokens.Color.chip, in: Capsule())
-            .overlay { Capsule().stroke(ChromeTokens.Color.chipStroke, lineWidth: 1) }
-            .shadow(color: .black.opacity(0.18), radius: 2)
+    }
+}
+
+/// Shown under a spotlight when the step advances on any tap.
+struct TapToContinueHint: View {
+    var body: some View {
+        Text("Tap anywhere to continue")
+            .padding(.vertical, 30)
+            .font(.system(size: 15, weight: .regular))
+            .foregroundStyle(.white.opacity(0.62))
+            .allowsHitTesting(false)
     }
 }

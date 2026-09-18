@@ -10,7 +10,8 @@ import SwiftUI
 
 struct ContentView: View {
     @AppStorage("hasFinishedOnboarding") private var hasFinishedOnboarding = false
-    @State private var isPresentingTutorial = true
+    @State private var isPresentingTutorial = false
+    @State private var isPresentingExhibitOne = false
 
     var body: some View {
         Group {
@@ -19,10 +20,15 @@ struct ContentView: View {
                     hasFinishedOnboarding = true
                     isPresentingTutorial = false
                 }
-            } else if hasFinishedOnboarding {
-                ExhibitGalleryView {
-                    isPresentingTutorial = true
+            } else if isPresentingExhibitOne {
+                CancellationExhibit {
+                    isPresentingExhibitOne = false
                 }
+            } else if hasFinishedOnboarding {
+                ExhibitGalleryView(
+                    onRetryTutorial: { isPresentingTutorial = true },
+                    onOpenExhibitOne: { isPresentingExhibitOne = true }
+                )
             } else {
                 WelcomeView(
                     onStartTutorial: { isPresentingTutorial = true },

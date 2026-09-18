@@ -6,23 +6,13 @@ struct WelcomeView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            (Text("Software can be\na good but also\n")
+            Text("Software can be\na good but also\n**deceptive** place")
                 .font(.system(size: 36, weight: .regular))
-            + Text("deceptive")
-                .font(.system(size: 36, weight: .bold))
-            + Text(" place")
-                .font(.system(size: 36, weight: .regular)))
                 .padding(.top, ChromeTokens.xl)
 
-            Group {
-                Text("Let’s learn to ")
-                    .font(.system(size: 19, weight: .regular))
-                + Text("identify")
-                    .font(.system(size: 19, weight: .bold))
-                + Text("\nthese patterns...")
-                    .font(.system(size: 19, weight: .regular))
-            }
-            .padding(.top, 54)
+            Text("Let's learn to **identify**\nthese patterns...")
+                .font(.system(size: 19, weight: .regular))
+                .padding(.top, 54)
 
             Spacer()
 
